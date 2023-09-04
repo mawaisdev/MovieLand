@@ -1,34 +1,58 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState } from 'react'
+import MovieCard, { Movie } from './components/MovieCard'
+import searchIcon from './assets/search.svg'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const API_KEY = import.meta.env.VITE_API_KEY
+  const API_URL = `${import.meta.env.VITE_API_URL}?apikey=${API_KEY}`
+
+  const [movies, setMovies] = useState<Movie[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const searchMovie = async (title: string) => {
+    const response = await fetch(`${API_URL}&s=${title}`)
+    const data = await response.json()
+    const moviesData = data.Search as Movie[]
+    setMovies(moviesData)
+  }
+
+  useEffect(() => {
+    searchMovie(searchTerm?.length > 0 ? searchTerm : 'Your Name')
+  }, [])
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className='app'>
+      <h1>Movie Land</h1>
+      <div className='search'>
+        <input
+          type='text'
+          placeholder='Search for Movies'
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value)
+          }}
+        />
+        <img
+          src={searchIcon}
+          alt='Search Icon'
+          onClick={() => {
+            searchMovie(searchTerm)
+          }}
+        />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      {movies?.length > 0 ? (
+        <div className='container'>
+          {movies.map((movie) => {
+            return <MovieCard {...movie} key={movie.imdbID} />
+          })}
+        </div>
+      ) : (
+        <div className='empty'>
+          <h2>No Movies Found</h2>
+        </div>
+      )}
+    </div>
   )
 }
 
